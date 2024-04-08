@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: postgres
+      PGDATABASE: postgres
+      PGPASSWORD: test
+      POSTGRES_PORT: 54321
+      PGPORT: 54321
+    ports:
+      - "54321:54321"
+    volumes:
+      - ./migration.sql:/docker-entrypoint-initdb.d/migration.sql
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
