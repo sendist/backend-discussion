@@ -20,6 +20,17 @@ CREATE TABLE IF NOT EXISTS "comment" (
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS "comment_reply" (
+    "id" SERIAL PRIMARY KEY,
+    "comment_id" INTEGER REFERENCES "comment"("id") ON DELETE CASCADE,
+    "user_id" TEXT NOT NULL,
+    "author" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "anonymous" BOOLEAN NOT NULL DEFAULT FALSE,
+    "verified" BOOLEAN NOT NULL DEFAULT FALSE,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS "tag" (
     "id" SERIAL PRIMARY KEY,
     "name" TEXT NOT NULL
