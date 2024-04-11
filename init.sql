@@ -48,3 +48,12 @@ CREATE TABLE IF NOT EXISTS "user_upvote_comment" (
     "comment_id" INTEGER REFERENCES "comment"("id") ON DELETE CASCADE,
     PRIMARY KEY ("user_id", "comment_id")
 );
+
+CREATE TABLE IF NOT EXISTS "report" (
+    "id" SERIAL PRIMARY KEY,
+    "user_id" TEXT NOT NULL,
+    "comment_id" INTEGER REFERENCES "comment"("id") ON DELETE CASCADE,
+    "report_type" TEXT NOT NULL,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "status_review" BOOLEAN NOT NULL DEFAULT FALSE,
+)

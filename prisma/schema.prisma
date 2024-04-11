@@ -92,3 +92,12 @@ model user_upvote_comment_reply {
 
   @@id([user_id, comment_reply_id])
 }
+
+model report {
+  id            Int      @id @default(autoincrement())
+  user_id       String
+  comment_id    Int      
+  report_type   String
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  status_review Boolean  @default(false)
+}
