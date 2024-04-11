@@ -85,6 +85,56 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.delete("/comment/:id", async (req, res) => {
+  // #swagger.tags = ['Discussion']
+  // #swagger.description = 'Delete a comment by id'
+  const id = parseInt(req.params.id);
+  const userId = req.body.userId;
+
+  const creator = await prisma.comment.findUnique({
+    where: { id },
+    select: { user_id: true },
+  });
+
+  if (!creator) {
+    return res.status(404).json({ error: "Comment not found" });
+  } else
+
+  if (creator.user_id !== userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  } else {
+    await prisma.comment.delete({
+      where: { id },
+    });
+    res.json({ message: "Comment deleted" });
+  }
+});
+
+router.delete("/comment-reply/:id", async (req, res) => {
+  // #swagger.tags = ['Discussion']
+  // #swagger.description = 'Delete a comment reply by id'
+  const id = parseInt(req.params.id);
+  const userId = req.body.userId;
+
+  const creator = await prisma.comment_reply.findUnique({
+    where: { id },
+    select: { user_id: true },
+  });
+
+  if (!creator) {
+    return res.status(404).json({ error: "Comment reply not found" });
+  } else
+
+  if (creator.user_id !== userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  } else {
+    await prisma.comment_reply.delete({
+      where: { id },
+    });
+    res.json({ message: "Comment reply deleted" });
+  }
+});
+
 router.patch("/comment/:id/upvote", async (req, res) => {
   // #swagger.tags = ['Discussion']
   // #swagger.description = 'Get a comment by id'
