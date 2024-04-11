@@ -26,3 +26,10 @@ VALUES
   (2, 4), -- neural networks
   (3, 1), -- AI 
   (3, 5); -- ethics 
+
+INSERT INTO "comment_reply" ("comment_id", "user_id", "author", "content", "anonymous")
+VALUES 
+  (1, 'user678', 'Brian', 'Great point! I also think...', FALSE),
+  (1, 'user234', 'Emily', 'Interesting perspective. Thanks for sharing!', FALSE), 
+  (3, 'user910', 'Alex', 'I disagree. Here''s why...', TRUE),
+  (2, 'user567', 'Sarah', 'Absolutely agree!', FALSE); 
