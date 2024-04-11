@@ -178,4 +178,10 @@ if (!isAdministrator) {
   }
 });
 
+router.post("/report", async (req, res) => {
+  const { data } = await req.body;
+  console.log(req.body);
+  console.log(data);
+});
+
 export default router;
