@@ -9,16 +9,9 @@ router.post("/thread", async (req, res) => {
   console.log(data);
 });
 
-// definisikan semua subroute disini
-router.get("/test", (req, res) => {
-  // #swagger.tags = ['Test Route']
-  // #swagger.description = 'Ini test route'
-  res.send("This is test route");
-});
-
 router.get("/", async (req, res) => {
   // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Get all discussions'
+  // #swagger.description = 'Get all discussions threads'
   const discussions = await prisma.thread.findMany({
     include: {
       comment: {
@@ -38,7 +31,7 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Get a discussion by id'
+  // #swagger.description = 'Get a specific discussion by id'
   const id = parseInt(req.params.id);
   const discussion = await prisma.thread.findUnique({
     where: {
@@ -62,7 +55,7 @@ router.get("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Delete a discussion by id'
+  // #swagger.description = 'Delete a specific discussion by id'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
 
@@ -87,7 +80,7 @@ router.delete("/:id", async (req, res) => {
 
 router.delete("/comment/:id", async (req, res) => {
   // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Delete a comment by id'
+  // #swagger.description = 'Delete a specific comment by id'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
 
@@ -112,7 +105,7 @@ router.delete("/comment/:id", async (req, res) => {
 
 router.delete("/comment-reply/:id", async (req, res) => {
   // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Delete a comment reply by id'
+  // #swagger.description = 'Delete a specific comment reply by id'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
 
@@ -137,7 +130,7 @@ router.delete("/comment-reply/:id", async (req, res) => {
 
 router.patch("/comment/:id/upvote", async (req, res) => {
   // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Get a comment by id'
+  // #swagger.description = 'Upvote a comment if not upvoted by user, otherwise remove upvote'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
 
@@ -184,7 +177,7 @@ router.patch("/comment/:id/upvote", async (req, res) => {
 
 router.post("/comment/user-upvote/:id", async (req, res) => {
   // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Get a comment by id'
+  // #swagger.description = 'Check if user has upvoted a comment'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
   const existingUpvote = await prisma.user_upvote_comment.findUnique({
@@ -205,7 +198,7 @@ router.post("/comment/user-upvote/:id", async (req, res) => {
 
 router.patch("/comment/:id/verify", async (req, res) => {
   // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Verify a comment by id'
+  // #swagger.description = 'Verify a specific comment if not verified, otherwise unverify it'
   const id = parseInt(req.params.id);
   const isAdministrator = req.body.isAdmin;
 
