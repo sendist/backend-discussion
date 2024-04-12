@@ -33,3 +33,7 @@ VALUES
   (1, 'user234', 'Emily', 'Interesting perspective. Thanks for sharing!', FALSE), 
   (3, 'user910', 'Alex', 'I disagree. Here''s why...', TRUE),
   (2, 'user567', 'Sarah', 'Absolutely agree!', FALSE); 
+
+INSERT INTO "report" ("user_id", "thread_id", "comment_id", "report_type", "status_review")
+VALUES
+	('user567', 1, 1, 'spam', FALSE);
