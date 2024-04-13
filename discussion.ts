@@ -3,7 +3,7 @@ import { prisma } from "./prisma";
 
 const router = express.Router();
 
-router.get("/discussion/discussion/tags", async (req, res) => {
+router.get("/discussion/discussion/discussion/tags", async (req, res) => {
   try {
     const tags = await prisma.tag.findMany();
     res.json(tags);
@@ -15,7 +15,7 @@ router.get("/discussion/discussion/tags", async (req, res) => {
 
 router.post("/thread", async (req, res) => {
   try {
-    const { user_id, author, title, content, anonymous, tag } = req.body;
+    const { user_id, author, title, content, anonymous, tags } = req.body;
     
     if (!user_id || !author || !title || !content) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -31,8 +31,8 @@ router.post("/thread", async (req, res) => {
       },
     });
 
-    if (tag && tag.length > 0) {
-      const threadTags = tag.map((tagId: number) => {
+    if (tags && tags.length > 0) {
+      const threadTags = tags.map((tagId: number) => {
         return {
           tag_id: tagId,
           thread_id: newThread.id,
@@ -49,6 +49,7 @@ router.post("/thread", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 // definisikan semua subroute disini
 router.get("/test", (req, res) => {
