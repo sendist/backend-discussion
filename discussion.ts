@@ -186,6 +186,9 @@ router.delete("/comment-reply/:id", async (req, res) => {
       where: { id },
     });
     res.json({ message: "Comment reply deleted" });
+  } catch (error) {
+    console.error("Error deleting comment reply:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
