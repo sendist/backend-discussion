@@ -1,12 +1,61 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { prisma } from "./prisma";
 
 const router = express.Router();
 
+router.get("/discussion/discussion/discussion/tags", async (req, res) => {
+  try {
+    const tags = await prisma.tag.findMany();
+    res.json(tags);
+  } catch (error) {
+    console.error("Error fetching tags:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.post("/thread", async (req, res) => {
-  const { data } = await req.body;
-  console.log(req.body);
-  console.log(data);
+  try {
+    const { user_id, author, title, content, anonymous, tags } = req.body;
+    
+    if (!user_id || !author || !title || !content) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const newThread = await prisma.thread.create({
+      data: {
+        user_id,
+        author,
+        title,
+        content,
+        anonymous,
+      },
+    });
+
+    if (tags && tags.length > 0) {
+      const threadTags = tags.map((tagId: number) => {
+        return {
+          tag_id: tagId,
+          thread_id: newThread.id,
+        };
+      });
+      await prisma.thread_tag.createMany({
+        data: threadTags,
+      });
+    }
+
+    res.json(newThread);
+  } catch (error) {
+    console.error("Error creating thread:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+// definisikan semua subroute disini
+router.get("/test", (req, res) => {
+  // #swagger.tags = ['Test Route']
+  // #swagger.description = 'Ini test route'
+  res.send("This is test route");
 });
 
 router.get("/", async (req, res) => {
@@ -66,15 +115,20 @@ router.delete("/:id", async (req, res) => {
 
   if (!creator) {
     return res.status(404).json({ error: "Discussion not found" });
-  } else
+  }
 
   if (creator.user_id !== userId) {
     return res.status(401).json({ error: "Unauthorized" });
-  } else {
+  }
+
+  try {
     await prisma.thread.delete({
       where: { id },
     });
     res.json({ message: "Discussion deleted" });
+  } catch (error) {
+    console.error("Error deleting discussion:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -91,15 +145,20 @@ router.delete("/comment/:id", async (req, res) => {
 
   if (!creator) {
     return res.status(404).json({ error: "Comment not found" });
-  } else
+  }
 
   if (creator.user_id !== userId) {
     return res.status(401).json({ error: "Unauthorized" });
-  } else {
+  }
+
+  try {
     await prisma.comment.delete({
       where: { id },
     });
     res.json({ message: "Comment deleted" });
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -116,11 +175,13 @@ router.delete("/comment-reply/:id", async (req, res) => {
 
   if (!creator) {
     return res.status(404).json({ error: "Comment reply not found" });
-  } else
+  }
 
   if (creator.user_id !== userId) {
     return res.status(401).json({ error: "Unauthorized" });
-  } else {
+  }
+
+  try {
     await prisma.comment_reply.delete({
       where: { id },
     });
