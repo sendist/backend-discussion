@@ -282,4 +282,105 @@ if (!isAdministrator) {
   }
 });
 
+router.post("/:id/comments", async (req, res) => {
+  try {
+    const { user_id, author, content, anonymous, verified } = req.body;
+    const threadId = parseInt(req.params.id); // Ambil ID thread dari parameter URL
+
+    // Pastikan data yang diperlukan tidak kosong
+    if (!user_id || !author || !content || !threadId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Cek apakah thread dengan ID yang diberikan ada
+    const existingThread = await prisma.thread.findUnique({
+      where: { id: threadId },
+    });
+
+    if (!existingThread) {
+      return res.status(404).json({ error: "Thread not found" });
+    }
+
+    // Buat komentar baru
+    const newComment = await prisma.comment.create({
+      data: {
+        user_id,
+        author,
+        content,
+        anonymous,
+        verified,
+        thread_id: threadId, // Set ID thread untuk komentar
+      },
+    });
+
+    res.json(newComment);
+  } catch (error) {
+    console.error("Error creating comment:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Endpoint untuk membuat komentar berdasarkan comment_id
+router.post("/:comment_id/reply", async (req: Request, res: Response) => {
+  try {
+    const { user_id, author, content, anonymous } = req.body;
+    const commentId = parseInt(req.params.comment_id);
+
+    // Pastikan data yang diperlukan tidak kosong
+    if (!user_id || !author || !content || !commentId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Cek apakah komentar dengan ID yang diberikan ada
+    const existingComment = await prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!existingComment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    // Buat comment reply baru
+    const newCommentReply = await prisma.comment_reply.create({
+      data: {
+        comment_id: commentId,
+        user_id,
+        author,
+        content,
+        anonymous,
+      },
+    });
+
+    res.status(201).json(newCommentReply);
+  } catch (error) {
+    console.error("Error creating comment reply:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Endpoint untuk mendapatkan semua balasan komentar berdasarkan comment_id
+router.get("/:comment_id/replies", async (req: Request, res: Response) => {
+  try {
+    const commentId = parseInt(req.params.comment_id);
+
+    // Cek apakah comment_id valid
+    if (!commentId || isNaN(commentId)) {
+      return res.status(400).json({ error: "Invalid comment ID" });
+    }
+
+    // Cari semua comment replies berdasarkan comment_id
+    const commentReplies = await prisma.comment_reply.findMany({
+      where: {
+        comment_id: commentId,
+      },
+    });
+
+    res.status(200).json(commentReplies);
+  } catch (error) {
+    console.error("Error fetching comment replies:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
 export default router;
