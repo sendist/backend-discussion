@@ -128,6 +128,27 @@ router.delete("/comment-reply/:id", async (req, res) => {
   }
 });
 
+router.get("/comment-reply/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const commentReply = await prisma.comment_reply.findUnique({
+      where: {
+        id: id 
+      }
+    });
+
+    if (!commentReply) {
+      return res.status(404).json({ error: "Comment reply not found" });
+    }
+
+    res.json(commentReply);
+  } catch (error) {
+    console.error("Error getting comment reply:", error);
+    res.status(500).json({ error: "Failed to get comment reply" });
+  }
+});
+
+
 router.patch("/comment/:id/upvote", async (req, res) => {
   // #swagger.tags = ['Discussion']
   // #swagger.description = 'Upvote a comment if not upvoted by user, otherwise remove upvote'
@@ -244,17 +265,14 @@ router.get("/comment/:id", async (req, res) => {
 
 router.post("/report", async (req, res) => {
   try {
-    const { user_id, thread_id, comment_id, report_type, created_at, status_review } = req.body;
+    const { user_id, thread_id, comment_id, comment_reply_id, report_type, created_at, status_review } = req.body;
     
-    if (!user_id || !thread_id || !comment_id || !report_type || !created_at) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
     const newReport = await prisma.report.create({
       data: {
         user_id,
         thread_id,
         comment_id,
+        comment_reply_id,
         report_type,
         created_at,
         status_review,
@@ -268,5 +286,24 @@ router.post("/report", async (req, res) => {
   }
 });
 
+router.get("/report/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const report = await prisma.report.findUnique({
+      where: {
+        id: id 
+      }
+    });
+
+    if (!report) {
+      return res.status(404).json({ error: "Report not found" });
+    }
+
+    res.json(report);
+  } catch (error) {
+    console.error("Error getting report:", error);
+    res.status(500).json({ error: "Failed to get report" });
+  }
+});
 
 export default router;

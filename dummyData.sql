@@ -34,6 +34,6 @@ VALUES
   (3, 'user910', 'Alex', 'I disagree. Here''s why...', TRUE),
   (2, 'user567', 'Sarah', 'Absolutely agree!', FALSE); 
 
-INSERT INTO "report" ("user_id", "thread_id", "comment_id", "report_type", "status_review")
+INSERT INTO "report" ("user_id", "thread_id", "comment_id", "comment_reply_id","report_type", "status_review")
 VALUES
-	('user567', 1, 1, 'spam', FALSE);
+	('user567', 1, 1, 1, 'spam', FALSE);

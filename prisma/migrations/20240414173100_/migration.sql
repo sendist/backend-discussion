@@ -96,6 +96,7 @@ CREATE TABLE "report" (
     "user_id" TEXT NOT NULL,
     "thread_id" INTEGER NOT NULL,
     "comment_id" INTEGER NOT NULL,
+    "comment_reply_id" INTEGER NOT NULL,
     "report_type" TEXT NOT NULL,
     "status_review" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
