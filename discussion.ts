@@ -221,10 +221,52 @@ if (!isAdministrator) {
   }
 });
 
-router.post("/report", async (req, res) => {
-  const { data } = await req.body;
-  console.log(req.body);
-  console.log(data);
+router.get("/comment/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const comment = await prisma.comment.findUnique({
+      where: {
+        id: id 
+      }
+    });
+
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    res.json(comment);
+  } catch (error) {
+    console.error("Error getting comment:", error);
+    res.status(500).json({ error: "Failed to get comment" });
+  }
 });
+
+
+router.post("/report", async (req, res) => {
+  try {
+    const { user_id, thread_id, comment_id, report_type, created_at, status_review } = req.body;
+    
+    if (!user_id || !thread_id || !comment_id || !report_type || !created_at) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const newReport = await prisma.report.create({
+      data: {
+        user_id,
+        thread_id,
+        comment_id,
+        report_type,
+        created_at,
+        status_review,
+      },
+    });
+
+    res.json(newReport);
+  } catch (error) {
+    console.error("Error creating report:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 export default router;
