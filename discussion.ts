@@ -350,14 +350,20 @@ router.post("/report", async (req, res) => {
   }
 });
 
-router.get("/report/:id", async (req, res) => {
+router.get("/report/:id?", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const report = await prisma.report.findUnique({
-      where: {
-        id: id 
-      }
-    });
+    const id = req.params.id ? parseInt(req.params.id) : null;
+    let report;
+
+    if (id) {
+      report = await prisma.report.findUnique({
+        where: {
+          id: id 
+        }
+      });
+    } else {
+      report = await prisma.report.findMany();
+    }
 
     if (!report) {
       return res.status(404).json({ error: "Report not found" });
@@ -369,18 +375,6 @@ router.get("/report/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to get report" });
   }
 });
-
-router.get("/report", async (req, res) => {
-  try {
-    const reports = await prisma.report.findMany();
-
-    res.json(reports);
-  } catch (error) {
-    console.error("Error getting reports:", error);
-    res.status(500).json({ error: "Failed to get reports" });
-  }
-});
-
 
 
 export default router;
