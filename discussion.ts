@@ -456,7 +456,7 @@ router.post("/report", async (req, res) => {
   }
 });
 
-router.get("/report/:id?", async (req, res) => {
+router.get("/report/data/:id?", async (req, res) => {
   try {
     const id = req.params.id ? parseInt(req.params.id) : null;
     let report;
