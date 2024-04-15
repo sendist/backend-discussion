@@ -456,7 +456,7 @@ router.post("/report", async (req, res) => {
   }
 });
 
-router.get("/report/:id?", async (req, res) => {
+router.get("/report/test/:id?", async (req, res) => {
   try {
     const id = req.params.id ? parseInt(req.params.id) : null;
     let report;
@@ -468,7 +468,7 @@ router.get("/report/:id?", async (req, res) => {
         }
       });
     } else {
-      report = await prisma.report.findMany();
+      report = await prisma.report.findMany({});
     }
 
     if (!report) {
