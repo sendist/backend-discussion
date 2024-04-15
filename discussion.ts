@@ -482,5 +482,83 @@ router.get("/report/data/:id?", async (req, res) => {
   }
 });
 
+router.get("/report/list", async (req, res) => {
+  try {
+    // Mendapatkan semua laporan dari database
+    const reports = await prisma.report.findMany({});
+
+    const reportData = [];
+
+    // Iterasi melalui setiap laporan untuk mendapatkan konten dan penulis
+    for (const report of reports) {
+      let content;
+      let author;
+
+      if (report.comment_reply_id) {
+        const commentReply = await prisma.comment_reply.findUnique({
+          where: {
+            id: report.comment_reply_id
+          },
+          select: {
+            content: true,
+            author: true
+          }
+        });
+
+        if (commentReply) {
+          content = commentReply.content;
+          author = commentReply.author;
+        }
+      } else if (report.comment_id && report.thread_id) {
+        const comment = await prisma.comment.findUnique({
+          where: {
+            id: report.comment_id
+          },
+          select: {
+            content: true,
+            author: true
+          }
+        });
+
+        if (comment) {
+          content = comment.content;
+          author = comment.author;
+        }
+      } else if (report.thread_id) {
+        const thread = await prisma.thread.findUnique({
+          where: {
+            id: report.thread_id
+          },
+          select: {
+            title: true,
+            author: true
+          }
+        });
+
+        if (thread) {
+          content = thread.title;
+          author = thread.author;
+        }
+      }
+
+      // Menambahkan data laporan beserta konten dan penulis ke dalam array reportData
+      reportData.push({
+        ...report,
+        content: content,
+        author: author,
+      });
+    }
+
+    // Mengirimkan data laporan yang telah diperoleh
+    res.json(reportData);
+  } catch (error) {
+    console.error("Error getting report content:", error);
+    res.status(500).json({ error: "Failed to get report content" });
+  }
+});
+
+
+
+
 
 export default router;
