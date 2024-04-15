@@ -32,6 +32,7 @@ model comment {
   upvote              Int                   @default(0)
   thread              thread?               @relation(fields: [thread_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   comment_reply       comment_reply[]
+  report              report[]
   user_upvote_comment user_upvote_comment[]
 }
 
@@ -51,6 +52,7 @@ model thread {
   comment_count Int          @default(0)
   created_at    DateTime     @default(now()) @db.Timestamp(6)
   comment       comment[]
+  report        report[]
   thread_tag    thread_tag[]
 }
 
@@ -74,6 +76,7 @@ model comment_reply {
   created_at                DateTime                    @default(now()) @db.Timestamp(6)
   upvote                    Int                         @default(0)
   comment                   comment?                    @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  report                    report[]
   user_upvote_comment_reply user_upvote_comment_reply[]
 }
 
@@ -94,12 +97,15 @@ model user_upvote_comment_reply {
 }
 
 model report {
-  id               Int      @id @default(autoincrement())
+  id               Int            @id @default(autoincrement())
   user_id          String
-  thread_id        Int
-  comment_id       Int
-  comment_reply_id Int      
+  thread_id        Int?
+  comment_id       Int?
+  comment_reply_id Int?
   report_type      String
-  status_review    Boolean  @default(false)
-  created_at       DateTime @default(now()) @db.Timestamp(6)
+  created_at       DateTime       @default(now()) @db.Timestamp(6)
+  status_review    Boolean        @default(false)
+  comment          comment?       @relation(fields: [comment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  comment_reply    comment_reply? @relation(fields: [comment_reply_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  thread           thread?        @relation(fields: [thread_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
