@@ -468,7 +468,7 @@ router.get("/report/data/:id?", async (req, res) => {
         }
       });
     } else {
-      report = await prisma.report.findMany();
+      report = await prisma.report.findMany({});
     }
 
     if (!report) {
