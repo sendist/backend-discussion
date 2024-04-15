@@ -476,4 +476,17 @@ router.get("/report/:id", async (req, res) => {
   }
 });
 
+router.get("/report", async (req, res) => {
+  try {
+    const reports = await prisma.report.findMany();
+
+    res.json(reports);
+  } catch (error) {
+    console.error("Error getting reports:", error);
+    res.status(500).json({ error: "Failed to get reports" });
+  }
+});
+
+
+
 export default router;

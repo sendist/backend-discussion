@@ -57,5 +57,5 @@ CREATE TABLE IF NOT EXISTS "report" (
     "comment_reply_id" INTEGER REFERENCES "comment_reply"("id") ON DELETE CASCADE,
     "report_type" TEXT NOT NULL,
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "status_review" BOOLEAN NOT NULL DEFAULT FALSE,
-)
+    "status_review" BOOLEAN NOT NULL DEFAULT FALSE
+);
