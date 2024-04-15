@@ -456,14 +456,20 @@ router.post("/report", async (req, res) => {
   }
 });
 
-router.get("/report/:id", async (req, res) => {
+router.get("/report/data/:id?", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const report = await prisma.report.findUnique({
-      where: {
-        id: id 
-      }
-    });
+    const id = req.params.id ? parseInt(req.params.id) : null;
+    let report;
+
+    if (id) {
+      report = await prisma.report.findUnique({
+        where: {
+          id: id 
+        }
+      });
+    } else {
+      report = await prisma.report.findMany({});
+    }
 
     if (!report) {
       return res.status(404).json({ error: "Report not found" });
@@ -476,16 +482,82 @@ router.get("/report/:id", async (req, res) => {
   }
 });
 
-router.get("/report", async (req, res) => {
+router.get("/report/list", async (req, res) => {
   try {
-    const reports = await prisma.report.findMany();
+    // Mendapatkan semua laporan dari database
+    const reports = await prisma.report.findMany({});
 
-    res.json(reports);
+    const reportData = [];
+
+    // Iterasi melalui setiap laporan untuk mendapatkan konten dan penulis
+    for (const report of reports) {
+      let content;
+      let author;
+
+      if (report.comment_reply_id) {
+        const commentReply = await prisma.comment_reply.findUnique({
+          where: {
+            id: report.comment_reply_id
+          },
+          select: {
+            content: true,
+            author: true
+          }
+        });
+
+        if (commentReply) {
+          content = commentReply.content;
+          author = commentReply.author;
+        }
+      } else if (report.comment_id && report.thread_id) {
+        const comment = await prisma.comment.findUnique({
+          where: {
+            id: report.comment_id
+          },
+          select: {
+            content: true,
+            author: true
+          }
+        });
+
+        if (comment) {
+          content = comment.content;
+          author = comment.author;
+        }
+      } else if (report.thread_id) {
+        const thread = await prisma.thread.findUnique({
+          where: {
+            id: report.thread_id
+          },
+          select: {
+            title: true,
+            author: true
+          }
+        });
+
+        if (thread) {
+          content = thread.title;
+          author = thread.author;
+        }
+      }
+
+      // Menambahkan data laporan beserta konten dan penulis ke dalam array reportData
+      reportData.push({
+        ...report,
+        content: content,
+        author: author,
+      });
+    }
+
+    // Mengirimkan data laporan yang telah diperoleh
+    res.json(reportData);
   } catch (error) {
-    console.error("Error getting reports:", error);
-    res.status(500).json({ error: "Failed to get reports" });
+    console.error("Error getting report content:", error);
+    res.status(500).json({ error: "Failed to get report content" });
   }
 });
+
+
 
 
 
