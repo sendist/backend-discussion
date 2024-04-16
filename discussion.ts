@@ -16,7 +16,7 @@ router.get("/discussion/discussion/discussion/tags", async (req, res) => {
 router.post("/thread", async (req, res) => {
   try {
     const { user_id, author, title, content, anonymous, tags } = req.body;
-    
+
     if (!user_id || !author || !title || !content) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -50,56 +50,58 @@ router.post("/thread", async (req, res) => {
   }
 });
 
-
-// definisikan semua subroute disini
-router.get("/test", (req, res) => {
-  // #swagger.tags = ['Test Route']
-  // #swagger.description = 'Ini test route'
-  res.send("This is test route");
-});
-
 router.get("/", async (req, res) => {
   // #swagger.tags = ['Discussion']
   // #swagger.description = 'Get all discussions threads'
-  const discussions = await prisma.thread.findMany({
-    include: {
-      comment: {
-        include: {
-          comment_reply: true,
+  try {
+    const discussions = await prisma.thread.findMany({
+      include: {
+        comment: {
+          include: {
+            comment_reply: true,
+          },
+        },
+        thread_tag: {
+          select: {
+            tag: true,
+          },
         },
       },
-      thread_tag: {
-        select: {
-          tag: true,
-        },
-      },
-    },
-  });
-  res.json(discussions);
+    });
+    res.json(discussions);
+  } catch (error) {
+    console.error("Error getting discussions:", error);
+    res.status(500).json({ error: "Failed to get discussions" });
+  }
 });
 
 router.get("/:id", async (req, res) => {
   // #swagger.tags = ['Discussion']
   // #swagger.description = 'Get a specific discussion by id'
-  const id = parseInt(req.params.id);
-  const discussion = await prisma.thread.findUnique({
-    where: {
-      id: id,
-    },
-    include: {
-      comment: {
-        include: {
-          comment_reply: true,
+  try {
+    const id = parseInt(req.params.id);
+    const discussion = await prisma.thread.findUnique({
+      where: {
+        id: id,
+      },
+      include: {
+        comment: {
+          include: {
+            comment_reply: true,
+          },
+        },
+        thread_tag: {
+          select: {
+            tag: true,
+          },
         },
       },
-      thread_tag: {
-        select: {
-          tag: true,
-        },
-      },
-    },
-  });
-  res.json(discussion);
+    });
+    res.json(discussion);
+  } catch (error) {
+    console.error("Error getting discussion:", error);
+    res.status(500).json({ error: "Failed to get discussion" });
+  }
 });
 
 router.delete("/:id", async (req, res) => {
@@ -303,8 +305,8 @@ router.get("/comment-reply/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const commentReply = await prisma.comment_reply.findUnique({
       where: {
-        id: id 
-      }
+        id: id,
+      },
     });
 
     if (!commentReply) {
@@ -317,7 +319,6 @@ router.get("/comment-reply/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to get comment reply" });
   }
 });
-
 
 router.patch("/comment/:id/upvote", async (req, res) => {
   // #swagger.tags = ['Discussion']
@@ -369,46 +370,56 @@ router.patch("/comment/:id/upvote", async (req, res) => {
 router.post("/comment/user-upvote/:id", async (req, res) => {
   // #swagger.tags = ['Discussion']
   // #swagger.description = 'Check if user has upvoted a comment'
-  const id = parseInt(req.params.id);
-  const userId = req.body.userId;
-  const existingUpvote = await prisma.user_upvote_comment.findUnique({
-    where: {
-      user_id_comment_id: {
-        comment_id: id,
-        user_id: userId,
+  try {
+    const id = parseInt(req.params.id);
+    const userId = req.body.userId;
+    const existingUpvote = await prisma.user_upvote_comment.findUnique({
+      where: {
+        user_id_comment_id: {
+          comment_id: id,
+          user_id: userId,
+        },
       },
-    },
-  });
-  console.log(existingUpvote);
-  if (existingUpvote) {
-    res.json({ existed: true });
-  } else {
-    res.json({ existed: false });
+    });
+    if (existingUpvote) {
+      res.json({ existed: true });
+    } else {
+      res.json({ existed: false });
+    }
+  } catch (error) {
+    console.error("Error checking upvote:", error);
+    res.status(500).json({ error: "Failed to check upvote" });
   }
 });
 
 router.patch("/comment/:id/verify", async (req, res) => {
   // #swagger.tags = ['Discussion']
   // #swagger.description = 'Verify a specific comment if not verified, otherwise unverify it'
-  const id = parseInt(req.params.id);
-  const isAdministrator = req.body.isAdmin;
 
-if (!isAdministrator) {
-    return res.status(401).json({ error: "Unauthorized" });
-  } else {
-    const existingComment = await prisma.comment.findUnique({ 
-      where: { id }
-    });
+  try {
+    const id = parseInt(req.params.id);
+    const isAdministrator = req.body.isAdmin;
 
-    if (!existingComment) {
-      return res.status(404).json({ error: "Comment not found" });
+    if (!isAdministrator) {
+      return res.status(401).json({ error: "Unauthorized" });
+    } else {
+      const existingComment = await prisma.comment.findUnique({
+        where: { id },
+      });
+
+      if (!existingComment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      const comment = await prisma.comment.update({
+        where: { id },
+        data: { verified: !existingComment.verified },
+      });
+      res.json(comment);
     }
-
-    const comment = await prisma.comment.update({
-      where: { id },
-      data: { verified: !existingComment.verified },
-    }); 
-    res.json(comment);
+  } catch (error) {
+    console.error("Error verifying comment:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -417,8 +428,8 @@ router.get("/comment/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const comment = await prisma.comment.findUnique({
       where: {
-        id: id 
-      }
+        id: id,
+      },
     });
 
     if (!comment) {
@@ -432,11 +443,18 @@ router.get("/comment/:id", async (req, res) => {
   }
 });
 
-
 router.post("/report", async (req, res) => {
   try {
-    const { user_id, thread_id, comment_id, comment_reply_id, report_type, created_at, status_review } = req.body;
-    
+    const {
+      user_id,
+      thread_id,
+      comment_id,
+      comment_reply_id,
+      report_type,
+      created_at,
+      status_review,
+    } = req.body;
+
     const newReport = await prisma.report.create({
       data: {
         user_id,
@@ -464,8 +482,8 @@ router.get("/report/data/:id?", async (req, res) => {
     if (id) {
       report = await prisma.report.findUnique({
         where: {
-          id: id 
-        }
+          id: id,
+        },
       });
     } else {
       report = await prisma.report.findMany({});
@@ -497,12 +515,12 @@ router.get("/report/list", async (req, res) => {
       if (report.comment_reply_id) {
         const commentReply = await prisma.comment_reply.findUnique({
           where: {
-            id: report.comment_reply_id
+            id: report.comment_reply_id,
           },
           select: {
             content: true,
-            author: true
-          }
+            author: true,
+          },
         });
 
         if (commentReply) {
@@ -512,12 +530,12 @@ router.get("/report/list", async (req, res) => {
       } else if (report.comment_id && report.thread_id) {
         const comment = await prisma.comment.findUnique({
           where: {
-            id: report.comment_id
+            id: report.comment_id,
           },
           select: {
             content: true,
-            author: true
-          }
+            author: true,
+          },
         });
 
         if (comment) {
@@ -527,12 +545,12 @@ router.get("/report/list", async (req, res) => {
       } else if (report.thread_id) {
         const thread = await prisma.thread.findUnique({
           where: {
-            id: report.thread_id
+            id: report.thread_id,
           },
           select: {
             title: true,
-            author: true
-          }
+            author: true,
+          },
         });
 
         if (thread) {
@@ -556,9 +574,5 @@ router.get("/report/list", async (req, res) => {
     res.status(500).json({ error: "Failed to get report content" });
   }
 });
-
-
-
-
 
 export default router;
