@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS "comment_reply" (
 
 CREATE TABLE IF NOT EXISTS "tag" (
     "id" SERIAL PRIMARY KEY,
-    "name" TEXT NOT NULL
+    "nama_tag" TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS "thread_tag" (
