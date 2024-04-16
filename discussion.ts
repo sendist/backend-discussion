@@ -118,20 +118,23 @@ router.delete("/:id", async (req, res) => {
     return res.status(404).json({ error: "Discussion not found" });
   }
 
-  if (isAdmin) {
-    try {
-      await prisma.thread.delete({
-        where: { id },
-      });
-      res.json({ message: "Discussion deleted" });
-    } catch (error) {
-      console.error("Error deleting discussion:", error);
-      res.status(500).json({ error: "Internal Server Error" });
-    }
+  if (creator.user_id !== userId) {
 
-    if (creator.user_id !== userId) {
+    if (isAdmin) {
+      try {
+        await prisma.thread.delete({
+          where: { id },
+        });
+        res.json({ message: "Discussion deleted" });
+      } catch (error) {
+        console.error("Error deleting discussion:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+    
+    } else {
       return res.status(401).json({ error: "Unauthorized" });
     }
+
   }
 
   try {
@@ -266,21 +269,23 @@ router.delete("/comment/:id", async (req, res) => {
   if (!creator) {
     return res.status(404).json({ error: "Comment not found" });
   }
-  
-  if (isAdmin) {
-    try {
-      await prisma.comment.delete({
-        where: { id },
-      });
-      res.json({ message: "Comment deleted" });
-    } catch (error) {
-      console.error("Error deleting comment:", error);
-      res.status(500).json({ error: "Internal Server Error" });
-    }
 
-    if (creator.user_id !== userId) {
-      return res.status(401).json({ error: "Unauthorized" });
+  if (creator.user_id !== userId) {
+
+    if(isAdmin) {
+      try {
+        await prisma.comment.delete({
+          where: { id },
+        });
+        res.json({ message: "Comment deleted" });
+      } catch (error) {
+        console.error("Error deleting comment:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    } else {
+        return res.status(401).json({ error: "Unauthorized" });
     }
+    
   }
   
   try {
@@ -310,21 +315,24 @@ router.delete("/comment-reply/:id", async (req, res) => {
     return res.status(404).json({ error: "Comment reply not found" });
   }
 
-  if(isAdmin) {
-    try {
-      await prisma.comment_reply.delete({
-        where: { id },
-      });
-      res.json({ message: "Comment reply deleted" });
-    } catch (error) {
-      console.error("Error deleting comment reply:", error);
-      res.status(500).json({ error: "Internal Server Error" });
-    }
+  if (creator.user_id !== userId) {
 
-    if (creator.user_id !== userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }  
-  }
+    if(isAdmin) {
+      try {
+        await prisma.comment_reply.delete({
+          where: { id },
+        });
+        res.json({ message: "Comment reply deleted" });
+      } catch (error) {
+        console.error("Error deleting comment reply:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    } else {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+  }  
+
 
   try {
     await prisma.comment_reply.delete({
