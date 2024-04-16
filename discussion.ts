@@ -509,7 +509,7 @@ router.get("/report/list", async (req, res) => {
           content = commentReply.content;
           author = commentReply.author;
         }
-      } else if (report.comment_id && report.thread_id) {
+      } else if (report.comment_id) {
         const comment = await prisma.comment.findUnique({
           where: {
             id: report.comment_id
