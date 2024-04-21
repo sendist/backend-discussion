@@ -10,7 +10,7 @@ VALUES
   (1, 'user890', 'Emily', 'I also found this YouTube series helpful: ...', TRUE, FALSE),
   (2, 'user123', 'Alice', 'Neural networks are like a layered network of neurons...', FALSE, FALSE);  
 
-INSERT INTO "tag" ("name")
+INSERT INTO "tag" ("nama_tag")
 VALUES
   ('AI'),
   ('learning'),

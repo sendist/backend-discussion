@@ -51,9 +51,16 @@ router.post("/thread", async (req, res) => {
 });
 
 router.get("/", async (req, res) => {
-  // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Get all discussions threads'
   try {
+    // Menentukan halaman yang diminta dan batasan thread per halaman
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    // Menghitung indeks awal dan akhir dari thread yang akan ditampilkan
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    // Mengambil thread diskusi dengan menggunakan pagination
     const discussions = await prisma.thread.findMany({
       include: {
         comment: {
@@ -67,7 +74,11 @@ router.get("/", async (req, res) => {
           },
         },
       },
+      // Menambahkan opsi skip dan take untuk pagination
+      skip: startIndex,
+      take: limit,
     });
+
     res.json(discussions);
   } catch (error) {
     console.error("Error getting discussions:", error);
