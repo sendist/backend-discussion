@@ -118,14 +118,10 @@ router.delete("/:id", async (req, res) => {
     return res.status(404).json({ error: "Discussion not found" });
   }
 
-  if (!isAdmin) {
-    
-    if (creator.user_id !== userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }  
-
+  if (creator.user_id !== userId && !isAdmin) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
-  
+
   try {
     await prisma.thread.delete({
       where: { id },
@@ -259,14 +255,10 @@ router.delete("/comment/:id", async (req, res) => {
     return res.status(404).json({ error: "Comment not found" });
   }
 
-  if (!isAdmin) {
-    
-    if (creator.user_id !== userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }  
-
+  if (creator.user_id !== userId && !isAdmin) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
-  
+
   try {
     await prisma.comment.delete({
       where: { id },
@@ -294,12 +286,8 @@ router.delete("/comment-reply/:id", async (req, res) => {
     return res.status(404).json({ error: "Comment reply not found" });
   }
 
-  if (!isAdmin) {
-    
-    if (creator.user_id !== userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }  
-
+  if (creator.user_id !== userId && !isAdmin) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
