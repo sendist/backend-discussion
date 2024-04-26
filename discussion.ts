@@ -437,6 +437,21 @@ router.post("/report", async (req, res) => {
   try {
     const { user_id, thread_id, comment_id, comment_reply_id, report_type, created_at, status_review } = req.body;
     
+    // Cek apakah laporan dengan id-id tersebut sudah ada
+    const existingReport = await prisma.report.findFirst({
+      where: {
+        OR: [
+          { thread_id },
+          { comment_id },
+          { comment_reply_id }
+        ]
+      }
+    });
+
+    if (existingReport) {
+      return res.status(400).json({ error: 'Report already exists' });
+    }
+
     const newReport = await prisma.report.create({
       data: {
         user_id,
@@ -445,16 +460,19 @@ router.post("/report", async (req, res) => {
         comment_reply_id,
         report_type,
         created_at,
-        status_review,
-      },
+        status_review
+      }
     });
 
-    res.json(newReport);
+    // Kirim response sukses jika laporan berhasil dibuat
+    return res.status(200).json({ message: 'Report created successfully', report: newReport });
   } catch (error) {
-    console.error("Error creating report:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    // Tangani error
+    console.error('Error creating report:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 router.get("/report/data/:id?", async (req, res) => {
   try {
