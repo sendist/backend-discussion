@@ -107,6 +107,7 @@ router.delete("/:id", async (req, res) => {
   // #swagger.description = 'Delete a specific discussion by id'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
+  const isAdmin = req.body.isAdmin;
 
   const creator = await prisma.thread.findUnique({
     where: { id },
@@ -117,10 +118,14 @@ router.delete("/:id", async (req, res) => {
     return res.status(404).json({ error: "Discussion not found" });
   }
 
-  if (creator.user_id !== userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  if (!isAdmin) {
+    
+    if (creator.user_id !== userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }  
 
+  }
+  
   try {
     await prisma.thread.delete({
       where: { id },
@@ -243,6 +248,7 @@ router.delete("/comment/:id", async (req, res) => {
   // #swagger.description = 'Delete a specific comment by id'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
+  const isAdmin = req.body.isAdmin;
 
   const creator = await prisma.comment.findUnique({
     where: { id },
@@ -253,10 +259,14 @@ router.delete("/comment/:id", async (req, res) => {
     return res.status(404).json({ error: "Comment not found" });
   }
 
-  if (creator.user_id !== userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  if (!isAdmin) {
+    
+    if (creator.user_id !== userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }  
 
+  }
+  
   try {
     await prisma.comment.delete({
       where: { id },
@@ -273,6 +283,7 @@ router.delete("/comment-reply/:id", async (req, res) => {
   // #swagger.description = 'Delete a specific comment reply by id'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
+  const isAdmin = req.body.isAdmin;
 
   const creator = await prisma.comment_reply.findUnique({
     where: { id },
@@ -283,8 +294,12 @@ router.delete("/comment-reply/:id", async (req, res) => {
     return res.status(404).json({ error: "Comment reply not found" });
   }
 
-  if (creator.user_id !== userId) {
-    return res.status(401).json({ error: "Unauthorized" });
+  if (!isAdmin) {
+    
+    if (creator.user_id !== userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }  
+
   }
 
   try {
@@ -527,7 +542,7 @@ router.get("/report/list", async (req, res) => {
           content = commentReply.content;
           author = commentReply.author;
         }
-      } else if (report.comment_id && report.thread_id) {
+      } else if (report.comment_id) {
         const comment = await prisma.comment.findUnique({
           where: {
             id: report.comment_id
