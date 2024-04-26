@@ -440,18 +440,18 @@ router.post("/report", async (req, res) => {
   try {
     const { user_id, thread_id, comment_id, comment_reply_id, report_type, created_at, status_review } = req.body;
     
-    // Cek apakah laporan dengan id-id tersebut sudah ada
     const existingReport = await prisma.report.findFirst({
       where: {
         OR: [
-          { thread_id },
-          { comment_id },
-          { comment_reply_id }
-        ]
+          { thread_id: thread_id ? { equals: thread_id } : undefined },
+          { comment_id: comment_id ? { equals: comment_id } : undefined },
+          { comment_reply_id: comment_reply_id ? { equals: comment_reply_id } : undefined },
+        ].filter(Boolean)
       }
     });
+    const reportExists = Boolean(existingReport);
 
-    if (existingReport) {
+    if (reportExists) {
       return res.status(400).json({ error: 'Report already exists' });
     }
 
