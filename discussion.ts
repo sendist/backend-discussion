@@ -13,6 +13,52 @@ router.get("/discussion/discussion/discussion/tags", async (req, res) => {
   }
 });
 
+router.get("/filterByTag/:tagId", async (req, res) => {
+  const tagId = parseInt(req.params.tagId);
+  if (isNaN(tagId)) {
+    return res.status(400).json({ error: "Invalid Tag ID" });
+  }
+  try {
+    const discussions = await prisma.thread.findMany({
+      where: {
+        thread_tag: {
+          some: {
+            tag_id: tagId,
+          },
+        },
+      },
+      include: {
+        comment: true,
+        thread_tag: {
+          select: {
+            tag: true,
+          },
+        },
+      },
+    });
+
+    if (discussions.length === 0) {
+      return res.status(404).json({ message: "No threads found for the selected tag" });
+    }
+
+    res.json(discussions);
+  } catch (error) {
+    console.error("Error getting discussions by tag:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/tags", async (req, res) => {
+  console.log('Fetching tags...');
+  try {
+    const tags = await prisma.tag.findMany();
+    res.json({ tags });
+  } catch (error) {
+    console.error("Error fetching tags:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.post("/thread", async (req, res) => {
   try {
     const { user_id, author, title, content, anonymous, tags } = req.body;
