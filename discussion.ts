@@ -32,15 +32,50 @@ router.post("/thread", async (req, res) => {
     });
 
     if (tags && tags.length > 0) {
-      const threadTags = tags.map((tagId: number) => {
-        return {
-          tag_id: tagId,
-          thread_id: newThread.id,
-        };
-      });
-      await prisma.thread_tag.createMany({
-        data: threadTags,
-      });
+      for (const tagName of tags) {
+        let tagId;
+        
+        // Mengubah nama tag yang diberikan dan yang ada di database menjadi lowercase
+        const existingTag = await prisma.tag.findFirst({
+          where: {
+            nama_tag: {
+              equals: tagName.toLowerCase(), // Menggunakan toLowerCase()
+            },
+          },
+        });
+      
+        if (existingTag) {
+          tagId = existingTag.id;
+        } else {
+          // Mengecek apakah tag dengan nama yang diubah menjadi lowercase sudah ada
+          const similarTag = await prisma.tag.findFirst({
+            where: {
+              nama_tag: {
+                contains: tagName.toLowerCase(), // Menggunakan toLowerCase()
+              },
+            },
+          });
+      
+          if (similarTag) {
+            tagId = similarTag.id; // Menggunakan ID tag yang sudah ada
+          } else {
+            // Membuat tag baru dengan nama tag dalam lowercase
+            const newTag = await prisma.tag.create({
+              data: {
+                nama_tag: tagName.toLowerCase(), // Menggunakan toLowerCase()
+              },
+            });
+            tagId = newTag.id;
+          }
+        }
+      
+        await prisma.thread_tag.create({
+          data: {
+            thread_id: newThread.id,
+            tag_id: tagId,
+          },
+        });
+      }
     }
 
     res.json(newThread);
