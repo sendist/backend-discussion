@@ -85,33 +85,6 @@ router.post("/thread", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
-  // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Get all discussions threads'
-  try {
-    const discussions = await prisma.thread.findMany({
-      include: {
-        comment: {
-          include: {
-            comment_reply: true,
-          },
-        },
-      },
-      include: {
-        thread_tag: {
-          select: {
-            tag: true,
-          },
-        },
-      },
-    });
-    res.json(newThread);
-  } catch (error) {
-    console.error("Error creating thread:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
 
 router.get("/", async (req, res) => {
   // #swagger.tags = ['Discussion']
@@ -643,9 +616,5 @@ router.get("/report/list", async (req, res) => {
     res.status(500).json({ error: "Failed to get report content" });
   }
 });
-
-
-
-
 
 export default router;
