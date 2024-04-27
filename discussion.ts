@@ -96,6 +96,8 @@ router.get("/", async (req, res) => {
             comment_reply: true,
           },
         },
+      },
+      include: {
         thread_tag: {
           select: {
             tag: true,
@@ -103,11 +105,30 @@ router.get("/", async (req, res) => {
         },
       },
     });
-    res.json(discussions);
+    res.json(newThread);
   } catch (error) {
-    console.error("Error getting discussions:", error);
-    res.status(500).json({ error: "Failed to get discussions" });
+    console.error("Error creating thread:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+
+router.get("/", async (req, res) => {
+  // #swagger.tags = ['Discussion']
+  // #swagger.description = 'Get all discussions threads'
+  const discussions = await prisma.thread.findMany({
+    orderBy: {
+      created_at: "desc",
+    },
+    include: {
+      thread_tag: {
+        select: {
+          tag: true,
+        },
+      },
+    },
+  });
+  res.json(discussions);
 });
 
 router.get("/:id", async (req, res) => {
@@ -144,6 +165,7 @@ router.delete("/:id", async (req, res) => {
   // #swagger.description = 'Delete a specific discussion by id'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
+  const isAdmin = req.body.isAdmin;
 
   const creator = await prisma.thread.findUnique({
     where: { id },
@@ -154,7 +176,7 @@ router.delete("/:id", async (req, res) => {
     return res.status(404).json({ error: "Discussion not found" });
   }
 
-  if (creator.user_id !== userId) {
+  if (creator.user_id !== userId && !isAdmin) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -280,6 +302,7 @@ router.delete("/comment/:id", async (req, res) => {
   // #swagger.description = 'Delete a specific comment by id'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
+  const isAdmin = req.body.isAdmin;
 
   const creator = await prisma.comment.findUnique({
     where: { id },
@@ -290,7 +313,7 @@ router.delete("/comment/:id", async (req, res) => {
     return res.status(404).json({ error: "Comment not found" });
   }
 
-  if (creator.user_id !== userId) {
+  if (creator.user_id !== userId && !isAdmin) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -310,6 +333,7 @@ router.delete("/comment-reply/:id", async (req, res) => {
   // #swagger.description = 'Delete a specific comment reply by id'
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
+  const isAdmin = req.body.isAdmin;
 
   const creator = await prisma.comment_reply.findUnique({
     where: { id },
@@ -320,7 +344,7 @@ router.delete("/comment-reply/:id", async (req, res) => {
     return res.status(404).json({ error: "Comment reply not found" });
   }
 
-  if (creator.user_id !== userId) {
+  if (creator.user_id !== userId && !isAdmin) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -480,15 +504,22 @@ router.get("/comment/:id", async (req, res) => {
 
 router.post("/report", async (req, res) => {
   try {
-    const {
-      user_id,
-      thread_id,
-      comment_id,
-      comment_reply_id,
-      report_type,
-      created_at,
-      status_review,
-    } = req.body;
+    const { user_id, thread_id, comment_id, comment_reply_id, report_type, created_at, status_review } = req.body;
+    
+    const existingReport = await prisma.report.findFirst({
+      where: {
+        OR: [
+          { thread_id: thread_id ? { equals: thread_id } : undefined },
+          { comment_id: comment_id ? { equals: comment_id } : undefined },
+          { comment_reply_id: comment_reply_id ? { equals: comment_reply_id } : undefined },
+        ].filter(Boolean)
+      }
+    });
+    const reportExists = Boolean(existingReport);
+
+    if (reportExists) {
+      return res.status(400).json({ error: 'Report already exists' });
+    }
 
     const newReport = await prisma.report.create({
       data: {
@@ -498,16 +529,19 @@ router.post("/report", async (req, res) => {
         comment_reply_id,
         report_type,
         created_at,
-        status_review,
-      },
+        status_review
+      }
     });
 
-    res.json(newReport);
+    // Kirim response sukses jika laporan berhasil dibuat
+    return res.status(200).json({ message: 'Report created successfully', report: newReport });
   } catch (error) {
-    console.error("Error creating report:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    // Tangani error
+    console.error('Error creating report:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 router.get("/report/data/:id?", async (req, res) => {
   try {
@@ -562,7 +596,7 @@ router.get("/report/list", async (req, res) => {
           content = commentReply.content;
           author = commentReply.author;
         }
-      } else if (report.comment_id && report.thread_id) {
+      } else if (report.comment_id) {
         const comment = await prisma.comment.findUnique({
           where: {
             id: report.comment_id,
@@ -609,5 +643,9 @@ router.get("/report/list", async (req, res) => {
     res.status(500).json({ error: "Failed to get report content" });
   }
 });
+
+
+
+
 
 export default router;
