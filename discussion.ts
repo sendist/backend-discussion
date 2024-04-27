@@ -28,39 +28,11 @@ router.post("/thread", async (req, res) => {
         title,
         content,
         anonymous,
-      },
-    });
-
-    if (tags && tags.length > 0) {
-      const threadTags = tags.map((tagId: number) => {
-        return {
-          tag_id: tagId,
-          thread_id: newThread.id,
-        };
-      });
-      await prisma.thread_tag.createMany({
-        data: threadTags,
-      });
-    }
-
-    res.json(newThread);
-  } catch (error) {
-    console.error("Error creating thread:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-router.get("/", async (req, res) => {
-  // #swagger.tags = ['Discussion']
-  // #swagger.description = 'Get all discussions threads'
-  try {
-    const discussions = await prisma.thread.findMany({
-      include: {
-        comment: {
-          include: {
-            comment_reply: true,
-          },
+        thread_tag: {
+          create: tags.map((tagId: number) => ({ tag: { connect: { id: tagId } } })),
         },
+      },
+      include: {
         thread_tag: {
           select: {
             tag: true,
@@ -68,11 +40,30 @@ router.get("/", async (req, res) => {
         },
       },
     });
-    res.json(discussions);
+    res.json(newThread);
   } catch (error) {
-    console.error("Error getting discussions:", error);
-    res.status(500).json({ error: "Failed to get discussions" });
+    console.error("Error creating thread:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+
+router.get("/", async (req, res) => {
+  // #swagger.tags = ['Discussion']
+  // #swagger.description = 'Get all discussions threads'
+  const discussions = await prisma.thread.findMany({
+    orderBy: {
+      created_at: "desc",
+    },
+    include: {
+      thread_tag: {
+        select: {
+          tag: true,
+        },
+      },
+    },
+  });
+  res.json(discussions);
 });
 
 router.get("/:id", async (req, res) => {
