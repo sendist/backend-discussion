@@ -4,6 +4,7 @@ import { prisma } from "./prisma";
 const router = express.Router();
 
 router.get("/discussion/discussion/discussion/tags", async (req, res) => {
+  // #swagger.tags = ['Discussion']
   try {
     const tags = await prisma.tag.findMany();
     res.json(tags);
@@ -83,6 +84,8 @@ router.post("/thread", async (req, res) => {
 router.get("/", async (req, res) => {
   // #swagger.tags = ['Discussion']
   // #swagger.description = 'Get all discussions threads'
+  try {
+
   const discussions = await prisma.thread.findMany({
     orderBy: {
       created_at: "desc",
@@ -96,6 +99,9 @@ router.get("/", async (req, res) => {
     },
   });
   res.json(discussions);
+  } catch (error) {
+    console.error("error getting all thread data", error);
+  }
 });
 
 router.get("/:id", async (req, res) => {
@@ -109,15 +115,8 @@ router.get("/:id", async (req, res) => {
       },
       include: {
         comment: {
-          orderBy: [
-            { verified: "desc" },
-            { upvote: "desc" },
-            { created_at: "desc" },
-          ],
           include: {
-            comment_reply: {
-              orderBy: { created_at: "desc" },
-            },
+            comment_reply: true,
           },
         },
         thread_tag: {
@@ -137,6 +136,7 @@ router.get("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   // #swagger.tags = ['Discussion']
   // #swagger.description = 'Delete a specific discussion by id'
+  try {
   const id = parseInt(req.params.id);
   const userId = req.body.userId;
   const isAdmin = req.body.isAdmin;
@@ -162,6 +162,9 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting discussion:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+  } catch (error) {
+    console.error("Error deleting discussion:", error);
   }
 });
 
@@ -342,8 +345,8 @@ router.get("/comment-reply/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const commentReply = await prisma.comment_reply.findUnique({
       where: {
-        id: id,
-      },
+        id: id
+      }
     });
 
     if (!commentReply) {
@@ -465,8 +468,8 @@ router.get("/comment/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const comment = await prisma.comment.findUnique({
       where: {
-        id: id,
-      },
+        id: id
+      }
     });
 
     if (!comment) {
@@ -483,33 +486,21 @@ router.get("/comment/:id", async (req, res) => {
 router.post("/report", async (req, res) => {
   // #swagger.tags = ['Discussion']
   try {
-    const {
-      user_id,
-      thread_id,
-      comment_id,
-      comment_reply_id,
-      report_type,
-      created_at,
-      status_review,
-    } = req.body;
-
+    const { user_id, thread_id, comment_id, comment_reply_id, report_type, created_at, status_review } = req.body;
+    
     const existingReport = await prisma.report.findFirst({
       where: {
         OR: [
           { thread_id: thread_id ? { equals: thread_id } : undefined },
           { comment_id: comment_id ? { equals: comment_id } : undefined },
-          {
-            comment_reply_id: comment_reply_id
-              ? { equals: comment_reply_id }
-              : undefined,
-          },
-        ].filter(Boolean),
-      },
+          { comment_reply_id: comment_reply_id ? { equals: comment_reply_id } : undefined },
+        ].filter(Boolean)
+      }
     });
     const reportExists = Boolean(existingReport);
 
     if (reportExists) {
-      return res.status(400).json({ error: "Report already exists" });
+      return res.status(400).json({ error: 'Report already exists' });
     }
 
     const newReport = await prisma.report.create({
@@ -520,18 +511,16 @@ router.post("/report", async (req, res) => {
         comment_reply_id,
         report_type,
         created_at,
-        status_review,
-      },
+        status_review
+      }
     });
 
     // Kirim response sukses jika laporan berhasil dibuat
-    return res
-      .status(200)
-      .json({ message: "Report created successfully", report: newReport });
+    return res.status(200).json({ message: 'Report created successfully', report: newReport });
   } catch (error) {
     // Tangani error
-    console.error("Error creating report:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.error('Error creating report:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -544,8 +533,8 @@ router.get("/report/data/:id?", async (req, res) => {
     if (id) {
       report = await prisma.report.findUnique({
         where: {
-          id: id,
-        },
+          id: id
+        }
       });
     } else {
       report = await prisma.report.findMany({});
@@ -566,7 +555,10 @@ router.get("/report/list", async (req, res) => {
   // #swagger.tags = ['Discussion']
   try {
     // Mendapatkan semua laporan dari database
-    const reports = await prisma.report.findMany({});
+    const reports = await prisma.report.findMany({
+      where: {
+      }
+    });
 
     const reportData = [];
 
@@ -578,27 +570,27 @@ router.get("/report/list", async (req, res) => {
       if (report.comment_reply_id) {
         const commentReply = await prisma.comment_reply.findUnique({
           where: {
-            id: report.comment_reply_id,
+            id: report.comment_reply_id
           },
           select: {
             content: true,
-            author: true,
-          },
+            author: true
+          }
         });
 
         if (commentReply) {
           content = commentReply.content;
           author = commentReply.author;
         }
-      } else if (report.comment_id) {
+      } else if (report.comment_id && report.thread_id) {
         const comment = await prisma.comment.findUnique({
           where: {
-            id: report.comment_id,
+            id: report.comment_id
           },
           select: {
             content: true,
-            author: true,
-          },
+            author: true
+          }
         });
 
         if (comment) {
@@ -608,12 +600,12 @@ router.get("/report/list", async (req, res) => {
       } else if (report.thread_id) {
         const thread = await prisma.thread.findUnique({
           where: {
-            id: report.thread_id,
+            id: report.thread_id
           },
           select: {
             title: true,
-            author: true,
-          },
+            author: true
+          }
         });
 
         if (thread) {

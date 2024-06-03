@@ -5,7 +5,7 @@ const router = express.Router();
 // setelah membuat route, masukkan import di sini.
 // Mohon samakan format penamaan default import dengan menambahkan "Route" pada akhir nama, misal:
 // import forumdiskusiRoute from "./forumdiskusi";
-import discussionRoute from "./discussion";
+import discussionRoute from "./discussionFromServer";
 
 
 // untuk masing-masing fitur, tambahkan route di sini. contoh:
